@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<style>
+  body {
+      margin: 0;
+      padding: 0;
+      background-image: url(./logo.png); /* Imagen de fondo para toda la página */
+      background-size: cover; /* Ajusta la imagen al tamaño de la ventana */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh; /* Esto asegura que el contenedor principal ocupe toda la altura de la ventana */
+    }
+
+  #contenido{
+    /* margin: 15% auto; */
+    width: 50%;
+    text-align: center;
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #contenido>hr{
+    width: 100%;
+    color: #265b91;
+    /* margin-bottom: 20px; */
+  }
+
+  #contenido>h2 {
+    /* margin-bottom: 20px; */
+    color: #265b91;
+    font-size: 30px;
+  }
+
+  input[type="file"] {
+  position: relative;
+}
+
+input[type="file"]::file-selector-button {
+  width: 136px;
+  color: transparent;
+}
+
+/* Faked label styles and icon */
+input[type="file"]::before {
+  position: absolute;
+  pointer-events: none;
+  top: 10px;
+  left: 16px;
+  height: 20px;
+  width: 20px;
+  content: "";
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%230964B0'%3E%3Cpath d='M18 15v3H6v-3H4v3c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-3h-2zM7 9l1.41 1.41L11 7.83V16h2V7.83l2.59 2.58L17 9l-5-5-5 5z'/%3E%3C/svg%3E");
+}
+
+input[type="file"]::after {
+  position: absolute;
+  pointer-events: none;
+  top: 11px;
+  left: 40px;
+  color: #0964b0;
+  content: "Upload File";
+}
+
+/* ------- From Step 1 ------- */
+
+/* file upload button */
+input[type="file"]::file-selector-button {
+  border-radius: 4px;
+  padding: 0 16px;
+  height: 40px;
+  cursor: pointer;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.05);
+  margin-right: 16px;
+  transition: background-color 200ms;
+}
+
+/* file upload button hover state */
+input[type="file"]::file-selector-button:hover {
+  background-color: #f3f4f6;
+}
+
+/* file upload button active state */
+input[type="file"]::file-selector-button:active {
+  background-color: #e5e7eb;
+}
+
+  #contenido>button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    background-color: #265b91;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background-color 200ms;
+  }
+  #contenido>button:hover {
+    background-color: #1e4a7e;
+  }
+
+
+  
+.button_slide {
+  margin-top: 20px;
+  color: #FFF;
+  border: 2px solid #265b91;
+  border-radius: 0px;
+  padding: 18px 36px;
+  display: inline-block;
+  font-family: "Lucida Console", Monaco, monospace;
+  font-size: 14px;
+
+  cursor: pointer;
+  box-shadow: inset 0 0 0 0 #265b91;
+  -webkit-transition: ease-out 0.4s;
+  -moz-transition: ease-out 0.4s;
+  transition: ease-out 0.4s;
+  color: #265b91;
+}
+
+.slide_down:hover {
+  box-shadow: inset 0 100px 0 0 #265b91;
+  color: #fff;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<script>
+  function convertToText() {
+    const fileInput = document.getElementById('excelFile');
+    const file = fileInput.files[0];
+    if (file) {
+      const fileName = file.name;
+
+      const fileExtension = fileName.slice(((fileName.lastIndexOf(".") - 1) >>> 0) + 2); // Obtener la extensión del archivo
+      if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+
+        const reader = new FileReader();
+        preguntasString = "";
+
+        reader.onload = function (e) {
+          const arrayBuffer = e.target.result;
+          const data = new Uint8Array(arrayBuffer);
+          const workbook = XLSX.read(data, { type: 'array' });
+
+          //¿Que unidad quieres?  numero de la unidad
+          var unidad = prompt("¿Que unidad quieres?");
+          if (unidad == "Examen" || unidad == "examen") {
+            unidad = 5;
+          }
+          unidad = parseInt(unidad);
+
+          nombreUnidad = prompt("¿Que nombre quieres ponerle a la unidad?");
+
+          if (nombreUnidad == "") {
+            if (unidad == 5) {
+              nombreUnidad = "Examen";
+            } else {
+              nombreUnidad = "Unidad " + unidad;
+            }
+          }
+
+          preguntasString += "\n$CATEGORY: " + nombreUnidad + "\n\n\n";
+          // Puedes procesar el contenido del archivo Excel aquí
+          // Por ejemplo, puedes obtener los datos de la primera hoja:
+          const firstSheetName = workbook.SheetNames[(unidad - 1)];
+          if (firstSheetName == undefined) {
+            alert("No existe la unidad, compruebe que cada página es una unidad." + unidad);
+            return;
+          }
+          const worksheet = workbook.Sheets[firstSheetName];
+
+          // Obtener un arreglo de las filas en la hoja
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+          // Crear un array de preguntas
+          const preguntas = [];
+
+          for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const pregunta = [];
+
+            for (let j = 0; j < row.length; j++) {
+              pregunta.push(row[j]);
+            }
+
+            preguntas.push(pregunta);
+          }
+
+          console.log(preguntas);
+
+          // Crear un nuevo array que contiene solo las preguntas con contenido
+          var preguntasFiltradas = preguntas.filter(function (pregunta) {
+            return pregunta[1] !== undefined && pregunta[1] !== "" && pregunta[1] !== "question" && pregunta[1] !== null && pregunta.length == 12 &&  pregunta.length !== 0 && pregunta[11] && pregunta[11] !== undefined && pregunta[11] !== "" && pregunta[11] !== null ;
+          });
+
+          console.log(preguntasFiltradas);
+          alert("Numero de preguntas: " + preguntasFiltradas.length);
+
+
+          for (i = 0; i < preguntasFiltradas.length; i++) {
+            preguntaString = "";
+            // comprobar excepciones
+            comprobarPregunta(preguntasFiltradas[i]);
+
+            //Creamos el string para el txt
+            preguntaString += preguntasFiltradas[i][1] + " {1.~" + preguntasFiltradas[i][2] + " #" + preguntasFiltradas[i][3] + " 2.~" + preguntasFiltradas[i][4] + " #" + preguntasFiltradas[i][5] + " 3.~" + preguntasFiltradas[i][6] + " #" + preguntasFiltradas[i][7] + " 4.~" + preguntasFiltradas[i][8] + " #" + preguntasFiltradas[i][9] + " }\n\n";
+            //reemplazar ~ por = dependiendo de la respuesta correcta
+            if (preguntasFiltradas[i][11].replace(".", "").trim() == "a") {
+              preguntaString = preguntaString.replace("1.~", "=");
+              preguntaString = preguntaString.replace("2.~", "~");
+              preguntaString = preguntaString.replace("3.~", "~");
+              preguntaString = preguntaString.replace("4.~", "~");
+            }
+            else if (preguntasFiltradas[i][11].replace(".", "").trim() == "b") {
+              preguntaString = preguntaString.replace("1.~", "~");
+              preguntaString = preguntaString.replace("2.~", "=");
+              preguntaString = preguntaString.replace("3.~", "~");
+              preguntaString = preguntaString.replace("4.~", "~");
+            }
+            else if (preguntasFiltradas[i][11].replace(".", "").trim() == "c") {
+              preguntaString = preguntaString.replace("1.~", "~");
+              preguntaString = preguntaString.replace("2.~", "~");
+              preguntaString = preguntaString.replace("3.~", "=");
+              preguntaString = preguntaString.replace("4.~", "~");
+            }
+            else if (preguntasFiltradas[i][11].replace(".", "").trim() == "d") {
+              preguntaString = preguntaString.replace("1.~", "~");
+              preguntaString = preguntaString.replace("2.~", "~");
+              preguntaString = preguntaString.replace("3.~", "~");
+              preguntaString = preguntaString.replace("4.~", "=");
+            }else {
+              alert("Error en la respuesta correcta de la pregunta:\n" + preguntasFiltradas[i][1]);
+            }
+
+            preguntasString += preguntaString;
+          }
+          if (unidad == 5) {
+            crearArchivoDeTexto("Examen", preguntasString);
+
+          } else {
+            crearArchivoDeTexto("Unidad " + unidad, preguntasString);
+          }
+          //console.log(preguntasString);
+          console.log(preguntasFiltradas);
+          console.log(preguntasString);
+
+        };
+
+        reader.readAsArrayBuffer(file);
+      } else {
+        alert('Por favor, selecciona un archivo Excel.');
+      }
+    }
+  }
+
+  function comprobarPregunta(pregunta) {
+    //Quitamos los espacios en blanco del principio y del final de la pregunta
+    pregunta[0] = pregunta[0].trim();
+    // Quitamos todas las a), b), c), d), a., b., c., d. de las respuestas y feedbacks
+    if (pregunta[2] != undefined && pregunta[2] != ""){
+      pregunta[2] = pregunta[2].replaceAll("a)", "");
+      pregunta[2] = pregunta[2].replaceAll("b)", "");
+      pregunta[2] = pregunta[2].replaceAll("c)", "");
+      pregunta[2] = pregunta[2].replaceAll("d)", "");
+      pregunta[2] = pregunta[2].replaceAll("a.", "");
+      pregunta[2] = pregunta[2].replaceAll("b.", "");
+      pregunta[2] = pregunta[2].replaceAll("c.", "");
+      pregunta[2] = pregunta[2].replaceAll("d.", "");
+      pregunta[2] = pregunta[2].replaceAll("A)", "");
+      pregunta[2] = pregunta[2].replaceAll("B)", "");
+      pregunta[2] = pregunta[2].replaceAll("C)", "");
+      pregunta[2] = pregunta[2].replaceAll("D)", "");
+      pregunta[2] = pregunta[2].replaceAll("A.", "");
+      pregunta[2] = pregunta[2].replaceAll("B.", "");
+      pregunta[2] = pregunta[2].replaceAll("C.", "");
+      pregunta[2] = pregunta[2].replaceAll("D.", "");
+      pregunta[2] = pregunta[2].trim();
+    }
+    if (pregunta[4] != undefined && pregunta[4] != ""){
+      pregunta[4] = pregunta[4].replaceAll("a)", "");
+      pregunta[4] = pregunta[4].replaceAll("b)", "");
+      pregunta[4] = pregunta[4].replaceAll("c)", "");
+      pregunta[4] = pregunta[4].replaceAll("d)", "");
+      pregunta[4] = pregunta[4].replaceAll("a.", "");
+      pregunta[4] = pregunta[4].replaceAll("b.", "");
+      pregunta[4] = pregunta[4].replaceAll("c.", "");
+      pregunta[4] = pregunta[4].replaceAll("d.", "");
+      pregunta[4] = pregunta[4].replaceAll("A)", "");
+      pregunta[4] = pregunta[4].replaceAll("B)", "");
+      pregunta[4] = pregunta[4].replaceAll("C)", "");
+      pregunta[4] = pregunta[4].replaceAll("D)", "");
+      pregunta[4] = pregunta[4].replaceAll("A.", "");
+      pregunta[4] = pregunta[4].replaceAll("B.", "");
+      pregunta[4] = pregunta[4].replaceAll("C.", "");
+      pregunta[4] = pregunta[4].replaceAll("D.", "");
+      pregunta[4] = pregunta[4].trim();
+    }
+    if (pregunta[6] != undefined && pregunta[6] != ""){
+      pregunta[6] = pregunta[6].replaceAll("a)", "");
+      pregunta[6] = pregunta[6].replaceAll("b)", "");
+      pregunta[6] = pregunta[6].replaceAll("c)", "");
+      pregunta[6] = pregunta[6].replaceAll("d)", "");
+      pregunta[6] = pregunta[6].replaceAll("a.", "");
+      pregunta[6] = pregunta[6].replaceAll("b.", "");
+      pregunta[6] = pregunta[6].replaceAll("c.", "");
+      pregunta[6] = pregunta[6].replaceAll("d.", "");
+      pregunta[6] = pregunta[6].replaceAll("A)", "");
+      pregunta[6] = pregunta[6].replaceAll("B)", "");
+      pregunta[6] = pregunta[6].replaceAll("C)", "");
+      pregunta[6] = pregunta[6].replaceAll("D)", "");
+      pregunta[6] = pregunta[6].replaceAll("A.", "");
+      pregunta[6] = pregunta[6].replaceAll("B.", "");
+      pregunta[6] = pregunta[6].replaceAll("C.", "");
+      pregunta[6] = pregunta[6].replaceAll("D.", "");
+      pregunta[6] = pregunta[6].trim();
+    }
+    if (pregunta[8] != undefined && pregunta[8] != ""){
+      pregunta[8] = pregunta[8].replaceAll("a)", "");
+      pregunta[8] = pregunta[8].replaceAll("b)", "");
+      pregunta[8] = pregunta[8].replaceAll("c)", "");
+      pregunta[8] = pregunta[8].replaceAll("d)", "");
+      pregunta[8] = pregunta[8].replaceAll("a.", "");
+      pregunta[8] = pregunta[8].replaceAll("b.", "");
+      pregunta[8] = pregunta[8].replaceAll("c.", "");
+      pregunta[8] = pregunta[8].replaceAll("d.", "");
+      pregunta[8] = pregunta[8].replaceAll("A)", "");
+      pregunta[8] = pregunta[8].replaceAll("B)", "");
+      pregunta[8] = pregunta[8].replaceAll("C)", "");
+      pregunta[8] = pregunta[8].replaceAll("D)", "");
+      pregunta[8] = pregunta[8].replaceAll("A.", "");
+      pregunta[8] = pregunta[8].replaceAll("B.", "");
+      pregunta[8] = pregunta[8].replaceAll("C.", "");
+      pregunta[8] = pregunta[8].replaceAll("D.", "");
+      pregunta[8] = pregunta[8].trim();
+    }
+    if (pregunta[3] != undefined && pregunta[3] != ""){
+      pregunta[3] = pregunta[3].replaceAll("a)", "");
+      pregunta[3] = pregunta[3].replaceAll("b)", "");
+      pregunta[3] = pregunta[3].replaceAll("c)", "");
+      pregunta[3] = pregunta[3].replaceAll("d)", "");
+      pregunta[3] = pregunta[3].replaceAll("a.", "");
+      pregunta[3] = pregunta[3].replaceAll("b.", "");
+      pregunta[3] = pregunta[3].replaceAll("c.", "");
+      pregunta[3] = pregunta[3].replaceAll("d.", "");
+      pregunta[3] = pregunta[3].replaceAll("A)", "");
+      pregunta[3] = pregunta[3].replaceAll("B)", "");
+      pregunta[3] = pregunta[3].replaceAll("C)", "");
+      pregunta[3] = pregunta[3].replaceAll("D)", "");
+      pregunta[3] = pregunta[3].replaceAll("A.", "");
+      pregunta[3] = pregunta[3].replaceAll("B.", "");
+      pregunta[3] = pregunta[3].replaceAll("C.", "");
+      pregunta[3] = pregunta[3].replaceAll("D.", "");
+      pregunta[3] = pregunta[3].trim();
+    }
+    if (pregunta[5] != undefined && pregunta[5] != ""){
+      pregunta[5] = pregunta[5].replaceAll("a)", "");
+      pregunta[5] = pregunta[5].replaceAll("b)", "");
+      pregunta[5] = pregunta[5].replaceAll("c)", "");
+      pregunta[5] = pregunta[5].replaceAll("d)", "");
+      pregunta[5] = pregunta[5].replaceAll("a.", "");
+      pregunta[5] = pregunta[5].replaceAll("b.", "");
+      pregunta[5] = pregunta[5].replaceAll("c.", "");
+      pregunta[5] = pregunta[5].replaceAll("d.", "");
+      pregunta[5] = pregunta[5].replaceAll("A)", "");
+      pregunta[5] = pregunta[5].replaceAll("B)", "");
+      pregunta[5] = pregunta[5].replaceAll("C)", "");
+      pregunta[5] = pregunta[5].replaceAll("D)", "");
+      pregunta[5] = pregunta[5].replaceAll("A.", "");
+      pregunta[5] = pregunta[5].replaceAll("B.", "");
+      pregunta[5] = pregunta[5].replaceAll("C.", "");
+      pregunta[5] = pregunta[5].replaceAll("D.", "");
+      pregunta[5] = pregunta[5].trim();
+    }
+    if (pregunta[7] != undefined && pregunta[7] != ""){
+      pregunta[7] = pregunta[7].replaceAll("a)", "");
+      pregunta[7] = pregunta[7].replaceAll("b)", "");
+      pregunta[7] = pregunta[7].replaceAll("c)", "");
+      pregunta[7] = pregunta[7].replaceAll("d)", "");
+      pregunta[7] = pregunta[7].replaceAll("a.", "");
+      pregunta[7] = pregunta[7].replaceAll("b.", "");
+      pregunta[7] = pregunta[7].replaceAll("c.", "");
+      pregunta[7] = pregunta[7].replaceAll("d.", "");
+      pregunta[7] = pregunta[7].replaceAll("A)", "");
+      pregunta[7] = pregunta[7].replaceAll("B)", "");
+      pregunta[7] = pregunta[7].replaceAll("C)", "");
+      pregunta[7] = pregunta[7].replaceAll("D)", "");
+      pregunta[7] = pregunta[7].replaceAll("A.", "");
+      pregunta[7] = pregunta[7].replaceAll("B.", "");
+      pregunta[7] = pregunta[7].replaceAll("C.", "");
+      pregunta[7] = pregunta[7].replaceAll("D.", "");
+      pregunta[7] = pregunta[7].trim();
+    }
+    if (pregunta[9] != undefined && pregunta[9] != ""){
+      pregunta[9] = pregunta[9].replaceAll("a)", "");
+      pregunta[9] = pregunta[9].replaceAll("b)", "");
+      pregunta[9] = pregunta[9].replaceAll("c)", "");
+      pregunta[9] = pregunta[9].replaceAll("d)", "");
+      pregunta[9] = pregunta[9].replaceAll("a.", "");
+      pregunta[9] = pregunta[9].replaceAll("b.", "");
+      pregunta[9] = pregunta[9].replaceAll("c.", "");
+      pregunta[9] = pregunta[9].replaceAll("d.", "");
+      pregunta[9] = pregunta[9].replaceAll("A)", "");
+      pregunta[9] = pregunta[9].replaceAll("B)", "");
+      pregunta[9] = pregunta[9].replaceAll("C)", "");
+      pregunta[9] = pregunta[9].replaceAll("D)", "");
+      pregunta[9] = pregunta[9].replaceAll("A.", "");
+      pregunta[9] = pregunta[9].replaceAll("B.", "");
+      pregunta[9] = pregunta[9].replaceAll("C.", "");
+      pregunta[9] = pregunta[9].replaceAll("D.", "");
+      pregunta[9] = pregunta[9].trim();
+    }
+
+    //Comprobamos que si la pregunta no es undefined o en blanco si tiene mayuscula la primera letra si no la tiene la ponemos en mayuscula
+    if (pregunta[1] != undefined && pregunta[1] != "" && pregunta[1].charAt(0) != pregunta[1].charAt(0).toUpperCase()) {
+      pregunta[1] = pregunta[1].charAt(0).toUpperCase() + pregunta[1].slice(1);
+      // alert("Primera letra de la pregunta puesta en mayuscula en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[2] != undefined && pregunta[2] != "" && pregunta[2].charAt(0) != pregunta[2].charAt(0).toUpperCase()) {
+      pregunta[2] = pregunta[2].charAt(0).toUpperCase() + pregunta[2].slice(1);
+      // alert("Primera letra de la pregunta puesta en mayuscula en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[3] != undefined && pregunta[3] != "" && pregunta[3].charAt(0) != pregunta[3].charAt(0).toUpperCase()) {
+      pregunta[3] = pregunta[3].charAt(0).toUpperCase() + pregunta[3].slice(1);
+      // alert("Primera letra de la pregunta puesta en mayuscula en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[4] != undefined && pregunta[4] != "" && pregunta[4].charAt(0) != pregunta[4].charAt(0).toUpperCase()) {
+      pregunta[4] = pregunta[4].charAt(0).toUpperCase() + pregunta[4].slice(1);
+      // alert("Primera letra de la pregunta puesta en mayuscula en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[5] != undefined && pregunta[5] != "" && pregunta[5].charAt(0) != pregunta[5].charAt(0).toUpperCase()) {
+      pregunta[5] = pregunta[5].charAt(0).toUpperCase() + pregunta[5].slice(1);
+      // alert("Primera letra de la pregunta puesta en mayuscula en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[6] != undefined && pregunta[6] != "" && pregunta[6].charAt(0) != pregunta[6].charAt(0).toUpperCase()) {
+      pregunta[6] = pregunta[6].charAt(0).toUpperCase() + pregunta[6].slice(1);
+      // alert("Primera letra de la pregunta puesta en mayuscula en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[7] != undefined && pregunta[7] != "" && pregunta[7].charAt(0) != pregunta[7].charAt(0).toUpperCase()) {
+      pregunta[7] = pregunta[7].charAt(0).toUpperCase() + pregunta[7].slice(1);
+      // alert("Primera letra de la pregunta puesta en mayuscula en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[8] != undefined && pregunta[8] != "" && pregunta[8].charAt(0) != pregunta[8].charAt(0).toUpperCase()) {
+      pregunta[8] = pregunta[8].charAt(0).toUpperCase() + pregunta[8].slice(1);
+      // alert("Primera letra de la pregunta puesta en mayuscula en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[9] != undefined && pregunta[9] != "" && pregunta[9].charAt(0) != pregunta[9].charAt(0).toUpperCase()) {
+      pregunta[9] = pregunta[9].charAt(0).toUpperCase() + pregunta[9].slice(1);
+      // alert("Primera letra de la pregunta puesta en mayuscula en la pregunta:\n" + pregunta[1]);
+    }
+    //Comprobamos que la pregunta tenga un punto final, dos puntos o final de una interrogacion
+    if (pregunta[1].charAt(pregunta[1].length - 1) != "." && pregunta[1].charAt(pregunta[1].length - 1) != ":" && pregunta[1].charAt(pregunta[1].length - 1) != "?") {
+      // se abre modal con la pregunta para que se pueda corregir
+      var respuesta = prompt("La pregunta no tiene un punto final, dos puntos o final de una interrogacion. \n" + pregunta[1], pregunta[1]);
+      if (respuesta == null || respuesta == "") { // Verificar si el usuario ingresó algo
+        // Actualizamos la pregunta solo si el usuario ingresó una respuesta
+        alert("Error: Debe introducir una pregunta");
+      } else {
+        pregunta[1] = respuesta;
+      }
+    }
+    //Comprobamos si la pregunta tiene las mismas interrogaciones abiertas que cerradas
+    if (pregunta[1].split("?").length - 1 != pregunta[1].split("¿").length - 1) {
+      // se abre modal con la pregunta para que se pueda corregir
+      var respuesta = prompt("La pregunta no tiene las mismas interrogaciones abiertas que cerradas. \n" + pregunta[1], pregunta[1]);
+      if (respuesta == null || respuesta == "") { // Verificar si el usuario ingresó algo
+        // Actualizamos la pregunta solo si el usuario ingresó una respuesta
+        alert("Error: Debe introducir una pregunta");
+      } else {
+        pregunta[1] = respuesta;
+      }
+      //alert("La pregunta no tiene las mismas interrogaciones abiertas que cerradas. \n" + pregunta[1]);
+    }
+
+    //Comprobamos si la pregunta tiene 4 respuestas
+    if (pregunta[2] == "" || pregunta[4] == "" || pregunta[6] == "" || pregunta[8] == "" ||
+      pregunta[2] == undefined || pregunta[4] == undefined || pregunta[6] == undefined || pregunta[8] == undefined) {
+      alert("FaltanError:  respuestas. \n" + pregunta[1])
+
+    }
+
+    //Comprobamos si las respuestas tienen punto final y si no lo tienen lo añadimos
+    for (campo of pregunta){
+      if (campo != undefined && campo != ""){
+        if (campo.charAt(campo.length - 1) != "." && campo.charAt(campo.length - 1) != ":" && campo.charAt(campo.length - 1) != "?") {
+          campo += ".";
+        }
+      }
+    }
+
+    
+    //Cambiar Todas las anteriores por todas las respuestas son correctas
+    if (pregunta[2] == "Todas las anteriores.") {
+      pregunta[2] = "Todas las respuestas son correctas.";
+      alert("Todas las anteriores cambiado por todas las respuestas son correctas en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[4] == "Todas las anteriores") {
+      pregunta[4] = "Todas las respuestas son correctas.";
+      alert("Todas las anteriores cambiado por todas las respuestas son correctas en la pregunta:\n" + pregunta[1]);
+
+
+    }
+    if (pregunta[6] == "Todas las anteriores") {
+      pregunta[6] = "Todas las respuestas son correctas.";
+      alert("Todas las anteriores cambiado por todas las respuestas son correctas en la pregunta:\n" + pregunta[1]);
+
+
+    }
+    if (pregunta[8] == "Todas las anteriores") {
+      pregunta[8] = "Todas las respuestas son correctas.";
+      alert("Todas las anteriores cambiado por todas las respuestas son correctas en la pregunta:\n" + pregunta[1]);
+
+    }
+    //Comprobamos si tienen saltos de linea y si los tienen los quitamos
+    if (pregunta[1] != undefined && pregunta[1].includes("\r")) {
+      pregunta[1] = pregunta[1].replaceAll("\n", " ");
+      pregunta[1] = pregunta[1].replaceAll("\r", "");
+      pregunta[1] = pregunta[1].replaceAll("\\", " ");
+      // alert("Salto de linea quitado en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[2] != undefined && pregunta[2].includes("\r")) {
+      pregunta[2] = pregunta[2].replaceAll("\n", " ");
+      pregunta[2] = pregunta[2].replaceAll("\r", "");
+      pregunta[2] = pregunta[2].replaceAll("\\", " ");
+      // alert("Salto de linea quitado en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[3] != undefined && pregunta[3].includes("\r")) {
+      pregunta[3] = pregunta[3].replaceAll("\n", " ");
+      pregunta[3] = pregunta[3].replaceAll("\r", "");
+      pregunta[3] = pregunta[3].replaceAll("\\", " ");
+      alert("Salto de linea quitado en el feedback de la pregunta\n" + pregunta[1]);
+    }
+    if (pregunta[4] != undefined && pregunta[4].includes("\r")) {
+      pregunta[4] = pregunta[4].replaceAll("\n", " ");
+      pregunta[4] = pregunta[4].replaceAll("\r", "");
+      pregunta[4] = pregunta[4].replaceAll("\\", " ");
+      // alert("Salto de linea quitado en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[5] != undefined && pregunta[5].includes("\r")) {
+      pregunta[5] = pregunta[5].replaceAll("\n", " ");
+      pregunta[5] = pregunta[5].replaceAll("\r", "");
+      pregunta[5] = pregunta[5].replaceAll("\\", " ");
+      // alert("Salto de linea quitado en el feedback de la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[6] != undefined && pregunta[6].includes("\r")) {
+      pregunta[6] = pregunta[6].replaceAll("\n", " ");
+      pregunta[6] = pregunta[6].replaceAll("\r", "");
+      pregunta[6] = pregunta[6].replaceAll("\\", " ");
+      // alert("Salto de linea quitado en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[7] != undefined && pregunta[7].includes("\r")) {
+      pregunta[7] = pregunta[7].replaceAll("\n", " ");
+      pregunta[7] = pregunta[7].replaceAll("\r", "");
+      pregunta[7] = pregunta[7].replaceAll("\\", " ");
+      // alert("Salto de linea quitado en el feedback de la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[8] != undefined && pregunta[8].includes("\r")) {
+      pregunta[8] = pregunta[8].replaceAll("\n", " ");
+      pregunta[8] = pregunta[8].replaceAll("\r", "");
+      pregunta[8] = pregunta[8].replaceAll("\\", " ");
+      // alert("Salto de linea quitado en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[9] != undefined && pregunta[9].includes("\r")) {
+      pregunta[9] = pregunta[9].replaceAll("\n", " ");
+      pregunta[9] = pregunta[9].replaceAll("\r", "");
+      pregunta[9] = pregunta[9].replaceAll("\\", " ");
+      // alert("Salto de linea quitado en el feedback de la pregunta:\n" + pregunta[1]);
+
+    }
+    //Comprobamos si la respuesta correcta esta en mayusculas y si esta la ponemos en minusculas
+    if (pregunta[11] == "A") {
+      pregunta[11] = pregunta[11].toLowerCase();
+    }
+    if (pregunta[11] == "B") {
+      pregunta[11] = pregunta[11].toLowerCase();
+    }
+    if (pregunta[11] == "C") {
+      pregunta[11] = pregunta[11].toLowerCase();
+    }
+    if (pregunta[11] == "D") {
+      pregunta[11] = pregunta[11].toLowerCase();
+    }
+    //Comprobamos si algun campo tiene un igual si es asi lo cambiamos por \= para que no falle
+    if (pregunta[0] != undefined && pregunta[0].includes("=")) {
+      pregunta[0] = pregunta[0].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+    }
+    if (pregunta[1] != undefined && pregunta[1].includes("=")) {
+      pregunta[1] = pregunta[0].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[2] != undefined && pregunta[2].includes("=")) {
+      pregunta[2] = pregunta[2].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[3] != undefined && pregunta[3].includes("=")) {
+      pregunta[3] = pregunta[0].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[4] != undefined && pregunta[4].includes("=")) {
+      pregunta[4] = pregunta[4].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[5] != undefined && pregunta[5].includes("=")) {
+      pregunta[5] = pregunta[0].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[6] != undefined && pregunta[6].includes("=")) {
+      pregunta[6] = pregunta[6].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[7] != undefined && pregunta[7].includes("=")) {
+      pregunta[7] = pregunta[0].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[8] != undefined && pregunta[8].includes("=")) {
+      pregunta[8] = pregunta[8].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[9] != undefined && pregunta[9].includes("=")) {
+      pregunta[9] = pregunta[0].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[10] != undefined && pregunta[10].includes("=")) {
+      pregunta[10] = pregunta[0].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+
+    }
+    if (pregunta[11] != undefined && pregunta[11].includes("=")) {
+      pregunta[11] = pregunta[11].replaceAll("=", "\\=");
+      alert("Igual reemplazado en la pregunta:\n" + pregunta[1]);
+    }
+
+    //Comprobamos fallos de ortografia
+    if (pregunta[1] != undefined && pregunta[1].includes(":?")) {
+      // se abre modal con la pregunta para que se pueda corregir
+      var respuesta = prompt("Fallo de ortografía en la pregunta: \n" + pregunta[1], pregunta[1]);
+      if (respuesta == null || respuesta == "") { // Verificar si el usuario ingresó algo
+        // Actualizamos la pregunta solo si el usuario ingresó una respuesta
+        alert("Error: Debe introducir una pregunta");
+      } else {
+        pregunta[1] = respuesta;
+      }
+    }
+    if (pregunta[1] != undefined && pregunta[1].includes("?:")) {
+      // se abre modal con la pregunta para que se pueda corregir
+      var respuesta = prompt("Fallo de ortografía en la pregunta: \n" + pregunta[1], pregunta[1]);
+      if (respuesta == null || respuesta == "") { // Verificar si el usuario ingresó algo
+        // Actualizamos la pregunta solo si el usuario ingresó una respuesta
+        alert("Error: Debe introducir una pregunta");
+      } else {
+        pregunta[1] = respuesta;
+      }
+    }
+
+    //Quitamos los feedbakcs como undifined y los dejamos en blanco
+    if (pregunta[3] == undefined) {
+      pregunta[3] = "";
+    }
+    if (pregunta[5] == undefined) {
+      pregunta[5] = "";
+    }
+    if (pregunta[7] == undefined) {
+      pregunta[7] = "";
+    }
+    if (pregunta[9] == undefined) {
+      pregunta[9] = "";
+    }
+
+
+  }
+
+  function crearArchivoDeTexto(nombreArchivo, contenido) {
+    // Crear un Blob con el contenido de texto
+    const blob = new Blob([contenido], { type: 'text/plain' });
+
+    // Crear un enlace de descarga
+    const enlace = document.createElement('a');
+    enlace.href = URL.createObjectURL(blob);
+    enlace.download = nombreArchivo;
+
+    // Simular un clic en el enlace para iniciar la descarga
+    enlace.click();
+
+    // Liberar recursos
+    URL.revokeObjectURL(enlace.href);
+  }
+
+
+
+</script>
+
+<body>
+  <div id="contenido">
+    <h2>UTE CONVERTER</h2>
+    <hr>
+    <input type="file" id="excelFile" accept=".xlsx">
+    <!-- <button onclick="convertToText()">Convertir a TXT</button> -->
+    <div class="button_slide slide_down"  onclick="convertToText()">Convertir a TXT</div>
+
+  </div>
+</body>
+
+</html>
